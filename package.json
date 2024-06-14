@@ -1,15 +1,24 @@
 {
-  "name": "nodejs",
+  "name": "noobs-api",
   "version": "1.0.0",
-  "description": "",
+  "description": "some apis for bots",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "author": "Dipto",
+  "license": "MIT",
   "dependencies": {
-    "@types/node": "^18.0.6"
-  }
+    "@types/node": "^18.0.6",
+    "axios": "^1.7.2"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Blankid018/noobs-api.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Blankid018/noobs-api/issues"
+  },
+  "homepage": "https://github.com/Blankid018/noobs-api#readme"
 }
