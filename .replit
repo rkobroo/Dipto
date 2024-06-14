@@ -1,4 +1,4 @@
-entrypoint = "index.js"
+entrypoint = "dlchk.js"
 modules = ["nodejs-20:v8-20230920-bd784b9"]
 hidden = [".config", "package-lock.json"]
 
@@ -12,6 +12,6 @@ channel = "stable-23_05"
 language = "nodejs"
 
 [deployment]
-run = ["node", "index.js"]
+run = ["node", "dlchk.js"]
 deploymentTarget = "cloudrun"
 ignorePorts = false

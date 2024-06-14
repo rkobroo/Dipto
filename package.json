@@ -1,17 +1,20 @@
 {
   "name": "noobs-api",
-  "version": "1.0.0",
+  "version": "1.0.4",
   "description": "some apis for bots",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "dlchk.js"
   },
   "keywords": [],
   "author": "Dipto",
   "license": "MIT",
   "dependencies": {
     "@types/node": "^18.0.6",
-    "axios": "^1.7.2"
+    "axios": "^1.7.2",
+    "index": "^0.4.0",
+    "index.js": "^0.0.3",
+    "noobs-api": "^1.0.3"
   },
   "repository": {
     "type": "git",

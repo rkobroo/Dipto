@@ -1,5 +1,5 @@
 ---
-# noobs-api(1.0.0)
+# noobs-api(1.0.4)
 
 ## Description
 
@@ -18,7 +18,7 @@ npm install noobs-api
 Import the package in your Node.js application:
 
 ```javascript
-const { download } = require('nobs-api');
+const { download } = require('noobs-api');
 ```
 
 ### `download(url)`
