@@ -22,7 +22,7 @@ const { download } = require('noobs-api');
 
 ### `download(url)`
 
-Asynchronously fetches data from a given URL using the NOOBS API.
+Asynchronously fetches data from a given URL using the NOOBS API By Dip To.
 
 #### Parameters
 
