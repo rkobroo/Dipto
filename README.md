@@ -1,6 +1,6 @@
 ---
 # noobs-api(1.0.4)
- **Website URL** [https://www.noobs-api.rf.gd](https://www.noobs-api.rf.gd)
+ **Website URL** 
 ## Description
 The `noobs-api` npm package allows you to download data from a specified URL using the NOBS API.
 
