@@ -1,7 +1,7 @@
 ---
 # noobs-api(1.0.4)
 
-- Website url https://www.noobs-api.rf.gd
+- Website url => "https://www.noobs-api.rf.gd"
   
 ## Description
 
