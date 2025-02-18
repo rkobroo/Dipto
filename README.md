@@ -1,6 +1,6 @@
 ---
 # noobs-api(1.0.4)
--
+dipto
 ## Description
 The `noobs-api` npm package allows you to download data from a specified URL using the NOBS API.
 
