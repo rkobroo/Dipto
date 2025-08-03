@@ -1,5 +1,5 @@
 
-const { download } = require('./index');
+import { download } from './index.js';
 
 async function testTikTokVideo() {
   try {
