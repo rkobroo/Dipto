@@ -200,7 +200,7 @@ const PORT = process.env.PORT || 5000;
 const startServer = (port) => {
   server.listen(port, '0.0.0.0', () => {
     console.log(`✅ Server successfully started on port ${port}`);
-    console.log(`🌐 Web interface available at: https://${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.repl.co`);
+    console.log(`🌐 Web interface available at: https://${process.env.REPL_SLUG}-${process.env.REPL_OWNER}.replit.app`);
     console.log(`🔗 Local access: http://0.0.0.0:${port}`);
   }).on('error', (err) => {
     console.error(`❌ Server error on port ${port}:`, err.message);
