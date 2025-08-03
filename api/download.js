@@ -14,7 +14,6 @@ export default async function handler(req, res) {
   // Resolve shortened URLs
   async function resolveUrl(shortUrl) {
     try {
-      // Handle TikTok shortened URLs
       if (shortUrl.includes('vt.tiktok.com') || shortUrl.includes('vm.tiktok.com')) {
         console.log(`🔗 Resolving shortened URL: ${shortUrl}`);
         const response = await axios.head(shortUrl, {
@@ -25,7 +24,6 @@ export default async function handler(req, res) {
         console.log(`✅ Resolved to: ${resolvedUrl}`);
         return resolvedUrl || shortUrl;
       }
-
       return shortUrl;
     } catch (error) {
       console.log(`⚠️ Could not resolve URL, using original: ${shortUrl}`);
@@ -62,8 +60,7 @@ export default async function handler(req, res) {
       {
         url: `https://api.tiklydown.eu.org/api/download?url=${encodeURIComponent(resolvedUrl)}`,
         method: 'GET',
-        name: 'TiklyDown',
-        platforms: ['tiktok']
+        name: 'TiklyDown'
       },
       {
         url: 'https://tikwm.com/api/',
@@ -72,154 +69,79 @@ export default async function handler(req, res) {
         data: {
           url: resolvedUrl,
           hd: 1
-        },
-        platforms: ['tiktok']
+        }
       },
       {
         url: 'https://api.cobalt.tools/api/json',
         method: 'POST',
-        name: 'Cobalt (TikTok)',
+        name: 'Cobalt',
         data: {
           url: resolvedUrl,
           vCodec: "h264",
           vQuality: "720",
           aFormat: "mp3",
           isAudioOnly: false
-        },
-        platforms: ['tiktok']
+        }
       }
     ];
   } else if (platform === 'facebook' || platform === 'instagram') {
     apiEndpoints = [
       {
-        url: 'https://yt-dlp-api.vercel.app/api/download',
-        method: 'POST',
-        name: 'YT-DLP API',
-        data: {
-          url: resolvedUrl,
-          format: 'best[ext=mp4]'
-        },
-        headers: {
-          'Content-Type': 'application/json',
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-        },
-        platforms: ['facebook', 'instagram']
-      },
-      {
-        url: 'https://ytdl-api.herokuapp.com/api/video',
-        method: 'POST',
-        name: 'YTDL Heroku',
-        data: {
-          url: resolvedUrl,
-          format: 'mp4'
-        },
-        headers: {
-          'Content-Type': 'application/json',
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-        },
-        platforms: ['facebook', 'instagram']
-      },
-      {
         url: 'https://api.cobalt.tools/api/json',
         method: 'POST',
-        name: 'Cobalt (FB/IG)',
+        name: 'Cobalt',
         data: {
           url: resolvedUrl,
           vCodec: "h264",
           vQuality: "720",
           aFormat: "mp3",
           isAudioOnly: false
-        },
-        headers: {
-          'Content-Type': 'application/json',
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-        },
-        platforms: ['facebook', 'instagram']
-      },
-      {
-        url: 'https://loader.to/ajax/download.php',
-        method: 'POST',
-        name: 'Loader.to',
-        data: {
-          type: 'video',
-          url: resolvedUrl,
-          token: ''
-        },
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-          'X-Requested-With': 'XMLHttpRequest',
-          'Referer': 'https://loader.to/'
-        },
-        platforms: ['facebook', 'instagram']
+        }
       },
       {
         url: 'https://snapsave.app/action.php',
         method: 'POST',
         name: 'SnapSave',
+        isFormData: true,
         data: {
           url: resolvedUrl,
           action: 'get_data'
-        },
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-          'X-Requested-With': 'XMLHttpRequest',
-          'Referer': 'https://snapsave.app/'
-        },
-        platforms: ['facebook', 'instagram']
+        }
       },
       {
         url: 'https://fdown.net/download',
         method: 'POST',
         name: 'FDown',
+        isFormData: true,
         data: {
           URLz: resolvedUrl
-        },
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-          'Referer': 'https://fdown.net/',
-          'Origin': 'https://fdown.net'
-        },
-        platforms: ['facebook', 'instagram']
+        }
       }
     ];
   } else if (platform === 'youtube') {
     apiEndpoints = [
       {
-        url: 'https://www.ssyoutube.com/api/convert',
+        url: 'https://api.cobalt.tools/api/json',
         method: 'POST',
-        name: 'SSYouTube',
+        name: 'Cobalt',
+        data: {
+          url: resolvedUrl,
+          vCodec: "h264",
+          vQuality: "720",
+          aFormat: "mp3",
+          isAudioOnly: false
+        }
+      },
+      {
+        url: 'https://y2mate.nu/api/convert',
+        method: 'POST',
+        name: 'Y2Mate',
+        isFormData: true,
         data: {
           url: resolvedUrl,
           format: 'mp4',
           quality: 'best'
-        },
-        headers: {
-          'Content-Type': 'application/json',
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-          'Referer': 'https://www.ssyoutube.com/',
-          'Origin': 'https://www.ssyoutube.com'
-        },
-        platforms: ['youtube']
-      },
-      {
-        url: `https://www.y2mate.com/mates/en/analyze/ajax`,
-        method: 'POST',
-        name: 'Y2Mate',
-        data: {
-          url: resolvedUrl,
-          q_auto: 1,
-          ajax: 1
-        },
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-          'X-Requested-With': 'XMLHttpRequest',
-          'Referer': 'https://www.y2mate.com/'
-        },
-        platforms: ['youtube']
+        }
       }
     ];
   } else if (platform === 'twitter') {
@@ -227,51 +149,24 @@ export default async function handler(req, res) {
       {
         url: 'https://api.cobalt.tools/api/json',
         method: 'POST',
-        name: 'Cobalt (Twitter)',
+        name: 'Cobalt',
         data: {
           url: resolvedUrl,
           vCodec: "h264",
           vQuality: "720",
           aFormat: "mp3",
           isAudioOnly: false
-        },
-        headers: {
-          'Content-Type': 'application/json',
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-        },
-        platforms: ['twitter']
+        }
       },
       {
-        url: 'https://twitsave.com/info',
-        method: 'POST',
-        name: 'TwitSave',
-        data: {
-          url: resolvedUrl
-        },
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-          'Referer': 'https://twitsave.com/',
-          'Origin': 'https://twitsave.com'
-        },
-        platforms: ['twitter']
-      },
-      {
-        url: 'https://ssstwitter.com/en',
+        url: 'https://ssstwitter.com/api',
         method: 'POST',
         name: 'SSSTwitter',
+        isFormData: true,
         data: {
           id: resolvedUrl,
-          locale: 'en',
-          tt: ''
-        },
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-          'Referer': 'https://ssstwitter.com/',
-          'X-Requested-With': 'XMLHttpRequest'
-        },
-        platforms: ['twitter']
+          locale: 'en'
+        }
       }
     ];
   } else {
@@ -293,69 +188,43 @@ export default async function handler(req, res) {
 
       let response;
       const config = {
-        timeout: 15000,
+        timeout: 20000,
         headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-          'Accept': 'application/json, text/html, */*',
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+          'Accept': '*/*',
           'Accept-Language': 'en-US,en;q=0.9',
-          'Referer': 'https://www.google.com/',
-          ...endpoint.headers
+          'Accept-Encoding': 'gzip, deflate, br',
+          'Connection': 'keep-alive',
+          'Sec-Fetch-Dest': 'empty',
+          'Sec-Fetch-Mode': 'cors',
+          'Sec-Fetch-Site': 'cross-site'
         }
       };
 
       if (endpoint.method === 'POST') {
-        if (endpoint.name === 'SnapSave') {
-          // SnapSave expects form data
+        if (endpoint.isFormData) {
+          // Use form data for specific APIs
           const formData = new URLSearchParams();
-          formData.append('url', resolvedUrl);
-          formData.append('action', 'get_data');
+          Object.keys(endpoint.data).forEach(key => {
+            formData.append(key, endpoint.data[key]);
+          });
 
-          response = await axios.post(endpoint.url, formData, config);
-        } else if (endpoint.name === 'Y2Mate') {
-          // Y2Mate expects form data
-          const formData = new URLSearchParams();
-          formData.append('url', resolvedUrl);
-          formData.append('q_auto', '1');
-          formData.append('ajax', '1');
+          config.headers['Content-Type'] = 'application/x-www-form-urlencoded';
 
-          response = await axios.post(endpoint.url, formData, config);
-        } else if (endpoint.name === 'SaveFrom') {
-          // SaveFrom expects form data
-          const formData = new URLSearchParams();
-          formData.append('url', resolvedUrl);
-          formData.append('quality', 'max');
-
-          response = await axios.post(endpoint.url, formData, config);
-        } else if (endpoint.name === 'FDown') {
-          // FDown expects form data
-          const formData = new URLSearchParams();
-          formData.append('URLz', resolvedUrl);
-
-          response = await axios.post(endpoint.url, formData, config);
-        } else if (endpoint.name === 'Loader.to') {
-          // Loader.to expects form data
-          const formData = new URLSearchParams();
-          formData.append('type', 'video');
-          formData.append('url', resolvedUrl);
-          formData.append('token', '');
-
-          response = await axios.post(endpoint.url, formData, config);
-        } else if (endpoint.name === 'TwitSave') {
-          // TwitSave expects form data
-          const formData = new URLSearchParams();
-          formData.append('url', resolvedUrl);
-
-          response = await axios.post(endpoint.url, formData, config);
-        } else if (endpoint.name === 'SSSTwitter') {
-          // SSSTwitter expects form data
-          const formData = new URLSearchParams();
-          formData.append('id', resolvedUrl);
-          formData.append('locale', 'en');
-          formData.append('tt', '');
+          if (endpoint.name === 'SnapSave') {
+            config.headers['Referer'] = 'https://snapsave.app/';
+            config.headers['Origin'] = 'https://snapsave.app';
+          } else if (endpoint.name === 'FDown') {
+            config.headers['Referer'] = 'https://fdown.net/';
+            config.headers['Origin'] = 'https://fdown.net';
+          } else if (endpoint.name === 'SSSTwitter') {
+            config.headers['Referer'] = 'https://ssstwitter.com/';
+            config.headers['Origin'] = 'https://ssstwitter.com';
+          }
 
           response = await axios.post(endpoint.url, formData, config);
         } else {
-          // Other APIs expect JSON (including YT-DLP APIs)
+          // Use JSON for APIs like Cobalt, TikWM
           config.headers['Content-Type'] = 'application/json';
           response = await axios.post(endpoint.url, endpoint.data, config);
         }
@@ -363,10 +232,10 @@ export default async function handler(req, res) {
         response = await axios.get(endpoint.url, config);
       }
 
-      console.log(`✅ ${endpoint.name} API responded successfully`);
+      console.log(`✅ ${endpoint.name} API responded with status: ${response.status}`);
 
       // Check if response has meaningful data
-      if (response.data && (
+      const hasValidData = response.data && (
         response.data.video_url || 
         response.data.download_url || 
         response.data.data || 
@@ -387,10 +256,15 @@ export default async function handler(req, res) {
         response.data.uploader ||
         response.data.webpage_url ||
         response.data.requested_downloads ||
-        (response.data.status && response.data.status === 'success') ||
+        response.data.play ||
+        response.data.wmplay ||
+        response.data.hdplay ||
+        (response.data.status && (response.data.status === 'success' || response.data.status === 'stream')) ||
         (Array.isArray(response.data) && response.data.length > 0) ||
-        (typeof response.data === 'string' && response.data.includes('download'))
-      )) {
+        (typeof response.data === 'string' && (response.data.includes('download') || response.data.includes('http')))
+      );
+
+      if (hasValidData) {
         return res.status(200).json({
           success: true,
           originalUrl: url,
@@ -401,17 +275,19 @@ export default async function handler(req, res) {
           data: response.data
         });
       } else {
-        console.log(`⚠️ ${endpoint.name} returned empty or invalid data`);
+        console.log(`⚠️ ${endpoint.name} returned response but no valid download data found`);
+
+        // If this is the last API, still return the response for debugging
         if (i === apiEndpoints.length - 1) {
           return res.status(200).json({
-            success: true,
+            success: false,
             originalUrl: url,
             resolvedUrl: resolvedUrl,
             platform: platform,
             contentType: response.headers['content-type'],
             apiUsed: endpoint.name,
             data: response.data,
-            warning: 'API responded but data structure may be unexpected'
+            warning: 'API responded but no download links found in response'
           });
         }
       }
@@ -438,18 +314,18 @@ export default async function handler(req, res) {
           originalUrl: url,
           resolvedUrl: resolvedUrl,
           suggestions: [
-            "The video might be private or age-restricted",
-            "The video URL might have expired or been removed", 
+            "The video might be private, age-restricted, or deleted",
             "Try using the direct video page URL instead of share links",
-            "Some APIs may be temporarily down"
+            "Some platforms have anti-bot measures that may block API requests",
+            "The video URL might have expired or been modified"
           ],
           testedApis: apiEndpoints.map(api => api.name),
           troubleshooting: {
-            facebook: "Facebook videos are often restricted. Try public posts only.",
-            tiktok: "Use full tiktok.com URLs, not shortened vt.tiktok.com links",
-            instagram: "Instagram videos may require the post to be public",
-            youtube: "Use full YouTube URLs. Age-restricted or private videos may not work.",
-            twitter: "Use full Twitter/X URLs. Protected tweets and accounts may not work."
+            tiktok: "Use full tiktok.com URLs. Private accounts or deleted videos won't work.",
+            facebook: "Facebook videos must be public. Private posts and pages are often blocked.",
+            instagram: "Instagram videos must be from public accounts. Stories and private posts won't work.",
+            youtube: "Use full YouTube URLs. Age-restricted, private, or region-blocked videos may fail.",
+            twitter: "Use full Twitter/X URLs. Protected accounts and deleted tweets won't work."
           }
         });
       }
