@@ -12,6 +12,28 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'URL is required' });
   }
 
+  // Resolve shortened TikTok URLs to full URLs
+  async function resolveUrl(shortUrl) {
+    try {
+      if (shortUrl.includes('vt.tiktok.com') || shortUrl.includes('vm.tiktok.com')) {
+        console.log(`🔗 Resolving shortened URL: ${shortUrl}`);
+        const response = await axios.head(shortUrl, {
+          maxRedirects: 0,
+          validateStatus: status => status === 302 || status === 301
+        });
+        const resolvedUrl = response.headers.location;
+        console.log(`✅ Resolved to: ${resolvedUrl}`);
+        return resolvedUrl || shortUrl;
+      }
+      return shortUrl;
+    } catch (error) {
+      console.log(`⚠️ Could not resolve URL, using original: ${shortUrl}`);
+      return shortUrl;
+    }
+  }
+
+  const resolvedUrl = await resolveUrl(url);
+
   // Function to extract TikTok video ID
   function extractTikTokId(url) {
     const match = url.match(/\/video\/(\d+)/);
@@ -21,12 +43,12 @@ export default async function handler(req, res) {
   // Try multiple API endpoints with different approaches
   const apiEndpoints = [
     {
-      url: `https://api.tiklydown.eu.org/api/download?url=${encodeURIComponent(url)}`,
+      url: `https://api.tiklydown.eu.org/api/download?url=${encodeURIComponent(resolvedUrl)}`,
       method: 'GET',
       name: 'TiklyDown'
     },
     {
-      url: `https://api16-normal-c-useast1a.tiktokv.com/aweme/v1/feed/?aweme_id=${extractTikTokId(url)}`,
+      url: `https://api16-normal-c-useast1a.tiktokv.com/aweme/v1/feed/?aweme_id=${extractTikTokId(resolvedUrl)}`,
       method: 'GET',
       name: 'TikTok Official',
       headers: {
@@ -38,7 +60,7 @@ export default async function handler(req, res) {
       method: 'POST',
       name: 'Cobalt',
       data: {
-        url: url,
+        url: resolvedUrl,
         vCodec: "h264",
         vQuality: "720",
         aFormat: "mp3",
@@ -46,7 +68,7 @@ export default async function handler(req, res) {
       }
     },
     {
-      url: `https://www.noobs-api.rf.gd/download?url=${encodeURIComponent(url)}`,
+      url: `https://www.noobs-api.rf.gd/download?url=${encodeURIComponent(resolvedUrl)}`,
       method: 'GET',
       name: 'Noobs API'
     },
@@ -55,7 +77,7 @@ export default async function handler(req, res) {
       method: 'POST',
       name: 'TikWM',
       data: {
-        url: url,
+        url: resolvedUrl,
         hd: 1
       }
     }
@@ -96,7 +118,8 @@ export default async function handler(req, res) {
       )) {
         return res.status(200).json({
           success: true,
-          url: url,
+          originalUrl: url,
+          resolvedUrl: resolvedUrl,
           contentType: response.headers['content-type'],
           apiUsed: endpoint.name,
           data: response.data
@@ -106,7 +129,8 @@ export default async function handler(req, res) {
         if (i === apiEndpoints.length - 1) {
           return res.status(200).json({
             success: true,
-            url: url,
+            originalUrl: url,
+            resolvedUrl: resolvedUrl,
             contentType: response.headers['content-type'],
             apiUsed: endpoint.name,
             data: response.data,
