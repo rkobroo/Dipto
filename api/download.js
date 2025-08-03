@@ -40,37 +40,60 @@ export default async function handler(req, res) {
     return match ? match[1] : null;
   }
 
+  // Detect platform type
+  function detectPlatform(url) {
+    if (url.includes('tiktok.com')) return 'tiktok';
+    if (url.includes('facebook.com') || url.includes('fb.watch')) return 'facebook';
+    if (url.includes('instagram.com')) return 'instagram';
+    if (url.includes('youtube.com') || url.includes('youtu.be')) return 'youtube';
+    if (url.includes('twitter.com') || url.includes('x.com')) return 'twitter';
+    return 'universal';
+  }
+
+  const platform = detectPlatform(resolvedUrl);
+  console.log(`🎯 Detected platform: ${platform}`);
+
   // Try multiple API endpoints with different approaches
   const apiEndpoints = [
-    {
-      url: `https://api.tiklydown.eu.org/api/download?url=${encodeURIComponent(resolvedUrl)}`,
-      method: 'GET',
-      name: 'TiklyDown'
-    },
-    {
-      url: `https://api16-normal-c-useast1a.tiktokv.com/aweme/v1/feed/?aweme_id=${extractTikTokId(resolvedUrl)}`,
-      method: 'GET',
-      name: 'TikTok Official',
-      headers: {
-        'User-Agent': 'com.ss.android.ugc.trill/494+TikTok+27.7.3+user_agent_hash',
-      }
-    },
+    // Universal downloaders (work with multiple platforms)
     {
       url: 'https://api.cobalt.tools/api/json',
       method: 'POST',
-      name: 'Cobalt',
+      name: 'Cobalt (Universal)',
       data: {
         url: resolvedUrl,
         vCodec: "h264",
         vQuality: "720",
         aFormat: "mp3",
         isAudioOnly: false
-      }
+      },
+      platforms: ['universal', 'tiktok', 'facebook', 'instagram', 'youtube', 'twitter']
     },
     {
-      url: `https://www.noobs-api.rf.gd/download?url=${encodeURIComponent(resolvedUrl)}`,
+      url: `https://api.fdownloader.net/api`,
+      method: 'POST',
+      name: 'FDownloader (Universal)',
+      data: {
+        url: resolvedUrl
+      },
+      platforms: ['universal', 'facebook', 'instagram', 'youtube', 'tiktok']
+    },
+    {
+      url: `https://api.savetubeapp.com/download`,
+      method: 'POST',
+      name: 'SaveTube (Universal)',
+      data: {
+        url: resolvedUrl,
+        quality: "720"
+      },
+      platforms: ['universal', 'facebook', 'instagram', 'youtube', 'tiktok']
+    },
+    // TikTok specific APIs
+    {
+      url: `https://api.tiklydown.eu.org/api/download?url=${encodeURIComponent(resolvedUrl)}`,
       method: 'GET',
-      name: 'Noobs API'
+      name: 'TiklyDown',
+      platforms: ['tiktok']
     },
     {
       url: 'https://tikwm.com/api/',
@@ -79,15 +102,38 @@ export default async function handler(req, res) {
       data: {
         url: resolvedUrl,
         hd: 1
-      }
+      },
+      platforms: ['tiktok']
+    },
+    // Facebook/Instagram specific
+    {
+      url: `https://api.down-fb.com/download`,
+      method: 'POST',
+      name: 'DownFB',
+      data: {
+        url: resolvedUrl
+      },
+      platforms: ['facebook', 'instagram']
+    },
+    // Fallback APIs
+    {
+      url: `https://www.noobs-api.rf.gd/download?url=${encodeURIComponent(resolvedUrl)}`,
+      method: 'GET',
+      name: 'Noobs API',
+      platforms: ['universal']
     }
   ];
 
-  for (let i = 0; i < apiEndpoints.length; i++) {
-    const endpoint = apiEndpoints[i];
+  // Filter APIs based on platform
+  const relevantApis = apiEndpoints.filter(api => 
+    api.platforms.includes(platform) || api.platforms.includes('universal')
+  );
+
+  for (let i = 0; i < relevantApis.length; i++) {
+    const endpoint = relevantApis[i];
     
     try {
-      console.log(`🔄 Trying API ${i + 1}/${apiEndpoints.length}: ${endpoint.name}`);
+      console.log(`🔄 Trying API ${i + 1}/${relevantApis.length}: ${endpoint.name}`);
       
       let response;
       const config = {
@@ -95,6 +141,8 @@ export default async function handler(req, res) {
         headers: {
           'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
           'Accept': 'application/json',
+          'Accept-Language': 'en-US,en;q=0.9',
+          'Referer': 'https://www.google.com/',
           ...endpoint.headers
         }
       };
@@ -108,13 +156,18 @@ export default async function handler(req, res) {
       
       console.log(`✅ ${endpoint.name} API responded successfully`);
       
-      // Check if response has meaningful data
+      // Check if response has meaningful data (expanded checks for different platforms)
       if (response.data && (
         response.data.video_url || 
         response.data.download_url || 
         response.data.data || 
         response.data.aweme_list ||
-        response.data.url
+        response.data.url ||
+        response.data.links ||
+        response.data.medias ||
+        response.data.video ||
+        response.data.downloadUrl ||
+        response.data.success
       )) {
         return res.status(200).json({
           success: true,
@@ -126,7 +179,7 @@ export default async function handler(req, res) {
         });
       } else {
         console.log(`⚠️ ${endpoint.name} returned empty or invalid data`);
-        if (i === apiEndpoints.length - 1) {
+        if (i === relevantApis.length - 1) {
           return res.status(200).json({
             success: true,
             originalUrl: url,
@@ -145,10 +198,13 @@ export default async function handler(req, res) {
       
       console.log(`❌ ${endpoint.name} failed: ${statusCode || 'Network Error'} - ${errorMsg}`);
       
-      if (i === apiEndpoints.length - 1) {
+      if (i === relevantApis.length - 1) {
         return res.status(500).json({
-          error: `All ${apiEndpoints.length} API endpoints failed. Most recent error: ${statusCode || 'Network Error'} - ${errorMsg}. The video URL might be private, expired, or the APIs are temporarily down.`,
-          success: false
+          error: `All ${relevantApis.length} relevant API endpoints failed for ${platform} platform. Most recent error: ${statusCode || 'Network Error'} - ${errorMsg}. The video URL might be private, expired, or the APIs are temporarily down.`,
+          success: false,
+          platform: platform,
+          originalUrl: url,
+          resolvedUrl: resolvedUrl
         });
       }
     }
