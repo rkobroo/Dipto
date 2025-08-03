@@ -1,5 +1,13 @@
 
 import axios from 'axios';
+import http from 'http';
+import fs from 'fs';
+import path from 'path';
+import url from 'url';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const download = async (url) => {
   if (!url) {
@@ -121,14 +129,6 @@ const download = async (url) => {
 };
 
 // Simple server setup with port checking
-import http from 'http';
-import fs from 'fs';
-import path from 'path';
-import url from 'url';
-import { fileURLToPath } from 'url';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 const server = http.createServer(async (req, res) => {
   const parsedUrl = url.parse(req.url, true);
