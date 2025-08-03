@@ -1,4 +1,3 @@
-
 import axios from 'axios';
 
 export default async function handler(req, res) {
@@ -12,7 +11,7 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'URL is required' });
   }
 
-  // Resolve shortened URLs and normalize Facebook URLs
+  // Resolve shortened URLs
   async function resolveUrl(shortUrl) {
     try {
       // Handle TikTok shortened URLs
@@ -26,18 +25,7 @@ export default async function handler(req, res) {
         console.log(`✅ Resolved to: ${resolvedUrl}`);
         return resolvedUrl || shortUrl;
       }
-      
-      // Normalize Facebook URLs
-      if (shortUrl.includes('facebook.com/share/r/')) {
-        // Convert share URLs to more compatible format
-        const shareMatch = shortUrl.match(/facebook\.com\/share\/r\/([a-zA-Z0-9]+)/);
-        if (shareMatch) {
-          console.log(`🔗 Converting Facebook share URL: ${shortUrl}`);
-          // This is a basic conversion - actual Facebook URLs are more complex
-          return shortUrl;
-        }
-      }
-      
+
       return shortUrl;
     } catch (error) {
       console.log(`⚠️ Could not resolve URL, using original: ${shortUrl}`);
@@ -59,93 +47,126 @@ export default async function handler(req, res) {
     if (url.includes('facebook.com') || url.includes('fb.watch')) return 'facebook';
     if (url.includes('instagram.com')) return 'instagram';
     if (url.includes('youtube.com') || url.includes('youtu.be')) return 'youtube';
-    if (url.includes('twitter.com') || url.includes('x.com')) return 'twitter';
-    if (url.includes('pinterest.com')) return 'pinterest';
-    if (url.includes('snapchat.com')) return 'snapchat';
-    if (url.includes('reddit.com')) return 'reddit';
-    if (url.includes('linkedin.com')) return 'linkedin';
-    if (url.includes('vimeo.com')) return 'vimeo';
-    if (url.includes('twitch.tv')) return 'twitch';
-    if (url.includes('dailymotion.com')) return 'dailymotion';
-    return 'universal';
+    return 'unsupported';
   }
 
   const platform = detectPlatform(resolvedUrl);
   console.log(`🎯 Detected platform: ${platform}`);
 
-  // Try multiple API endpoints with different approaches
-  const apiEndpoints = [
-    // Universal downloaders (work with multiple platforms) - Primary tier
-    {
-      url: 'https://api.cobalt.tools/api/json',
-      method: 'POST',
-      name: 'Cobalt (Universal)',
-      data: {
-        url: resolvedUrl,
-        vCodec: "h264",
-        vQuality: "720",
-        aFormat: "mp3",
-        isAudioOnly: false
-      },
-      platforms: ['universal', 'tiktok', 'facebook', 'instagram', 'youtube', 'twitter']
-    },
-    // Facebook specific APIs
-    {
-      url: `https://www.noobs-api.rf.gd/download?url=${encodeURIComponent(resolvedUrl)}`,
-      method: 'GET',
-      name: 'Noobs API (Facebook)',
-      platforms: ['facebook', 'universal']
-    },
-    // TikTok specific APIs - Enhanced
-    {
-      url: `https://api.tiklydown.eu.org/api/download?url=${encodeURIComponent(resolvedUrl)}`,
-      method: 'GET',
-      name: 'TiklyDown',
-      platforms: ['tiktok']
-    },
-    {
-      url: 'https://tikwm.com/api/',
-      method: 'POST',
-      name: 'TikWM',
-      data: {
-        url: resolvedUrl,
-        hd: 1
-      },
-      platforms: ['tiktok']
-    },
-    // YouTube specific - Most reliable for YouTube
-    {
-      url: `https://www.youtube.com/oembed?url=${encodeURIComponent(resolvedUrl)}&format=json`,
-      method: 'GET',
-      name: 'YouTube oEmbed',
-      platforms: ['youtube']
-    },
-    // Additional Facebook fallback
-    {
-      url: 'https://api.savefrom.net/getinfo',
-      method: 'GET',
-      name: 'SaveFrom.net',
-      platforms: ['facebook', 'youtube', 'universal']
-    }
-  ];
+  // Platform-specific API endpoints
+  let apiEndpoints = [];
 
-  // Filter APIs based on platform
-  const relevantApis = apiEndpoints.filter(api => 
-    api.platforms.includes(platform) || api.platforms.includes('universal')
-  );
+  if (platform === 'tiktok') {
+    apiEndpoints = [
+      {
+        url: `https://api.tiklydown.eu.org/api/download?url=${encodeURIComponent(resolvedUrl)}`,
+        method: 'GET',
+        name: 'TiklyDown',
+        platforms: ['tiktok']
+      },
+      {
+        url: 'https://tikwm.com/api/',
+        method: 'POST',
+        name: 'TikWM',
+        data: {
+          url: resolvedUrl,
+          hd: 1
+        },
+        platforms: ['tiktok']
+      },
+      {
+        url: 'https://api.cobalt.tools/api/json',
+        method: 'POST',
+        name: 'Cobalt (TikTok)',
+        data: {
+          url: resolvedUrl,
+          vCodec: "h264",
+          vQuality: "720",
+          aFormat: "mp3",
+          isAudioOnly: false
+        },
+        platforms: ['tiktok']
+      }
+    ];
+  } else if (platform === 'facebook' || platform === 'instagram') {
+    apiEndpoints = [
+      {
+        url: 'https://snapsave.app/action.php',
+        method: 'POST',
+        name: 'SnapSave',
+        data: {
+          url: resolvedUrl,
+          action: 'get_data'
+        },
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+          'X-Requested-With': 'XMLHttpRequest',
+          'Referer': 'https://snapsave.app/'
+        },
+        platforms: ['facebook', 'instagram']
+      }
+    ];
+  } else if (platform === 'youtube') {
+    apiEndpoints = [
+      {
+        url: 'https://www.ssyoutube.com/api/convert',
+        method: 'POST',
+        name: 'SSYouTube',
+        data: {
+          url: resolvedUrl,
+          format: 'mp4',
+          quality: 'best'
+        },
+        headers: {
+          'Content-Type': 'application/json',
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+          'Referer': 'https://www.ssyoutube.com/',
+          'Origin': 'https://www.ssyoutube.com'
+        },
+        platforms: ['youtube']
+      },
+      {
+        url: `https://www.y2mate.com/mates/en/analyze/ajax`,
+        method: 'POST',
+        name: 'Y2Mate',
+        data: {
+          url: resolvedUrl,
+          q_auto: 1,
+          ajax: 1
+        },
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+          'X-Requested-With': 'XMLHttpRequest',
+          'Referer': 'https://www.y2mate.com/'
+        },
+        platforms: ['youtube']
+      }
+    ];
+  } else {
+    return res.status(200).json({
+      success: false,
+      error: `Platform not supported. Only TikTok, Facebook, Instagram, and YouTube are supported.`,
+      platform: platform,
+      originalUrl: url,
+      resolvedUrl: resolvedUrl,
+      supportedPlatforms: ['TikTok', 'Facebook', 'Instagram', 'YouTube']
+    });
+  }
 
-  for (let i = 0; i < relevantApis.length; i++) {
-    const endpoint = relevantApis[i];
-    
+  for (let i = 0; i < apiEndpoints.length; i++) {
+    const endpoint = apiEndpoints[i];
+
     try {
-      console.log(`🔄 Trying API ${i + 1}/${relevantApis.length}: ${endpoint.name}`);
-      
+      console.log(`🔄 Trying API ${i + 1}/${apiEndpoints.length}: ${endpoint.name}`);
+
       let response;
       const config = {
         timeout: 15000,
         headers: {
           'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-          'Accept': 'application/json',
+          'Accept': 'application/json, text/html, */*',
           'Accept-Language': 'en-US,en;q=0.9',
           'Referer': 'https://www.google.com/',
           ...endpoint.headers
@@ -153,39 +174,33 @@ export default async function handler(req, res) {
       };
 
       if (endpoint.method === 'POST') {
-        config.headers['Content-Type'] = 'application/json';
-        response = await axios.post(endpoint.url, endpoint.data, config);
-      } else {
-        // For GET requests with parameters, append URL if needed
-        let requestUrl = endpoint.url;
-        if (endpoint.data && endpoint.method === 'GET') {
-          const params = new URLSearchParams(endpoint.data);
-          requestUrl += (requestUrl.includes('?') ? '&' : '?') + params.toString();
+        if (endpoint.name === 'SnapSave') {
+          // SnapSave expects form data
+          const formData = new URLSearchParams();
+          formData.append('url', resolvedUrl);
+          formData.append('action', 'get_data');
+
+          response = await axios.post(endpoint.url, formData, config);
+        } else if (endpoint.name === 'Y2Mate') {
+          // Y2Mate expects form data
+          const formData = new URLSearchParams();
+          formData.append('url', resolvedUrl);
+          formData.append('q_auto', '1');
+          formData.append('ajax', '1');
+
+          response = await axios.post(endpoint.url, formData, config);
+        } else {
+          // Other APIs expect JSON
+          config.headers['Content-Type'] = 'application/json';
+          response = await axios.post(endpoint.url, endpoint.data, config);
         }
-        response = await axios.get(requestUrl, config);
+      } else {
+        response = await axios.get(endpoint.url, config);
       }
 
-      // Check if response is actually JSON
-      const contentType = response.headers['content-type'] || '';
-      if (!contentType.includes('application/json') && !contentType.includes('text/json')) {
-        console.log(`⚠️ ${endpoint.name} returned non-JSON response: ${contentType}`);
-        // Try to parse anyway in case the content-type header is wrong
-        try {
-          if (typeof response.data === 'string') {
-            response.data = JSON.parse(response.data);
-          }
-        } catch (parseError) {
-          console.log(`❌ ${endpoint.name} response is not valid JSON`);
-          if (i === relevantApis.length - 1) {
-            throw new Error('All APIs returned non-JSON responses');
-          }
-          continue;
-        }
-      }
-      
       console.log(`✅ ${endpoint.name} API responded successfully`);
-      
-      // Check if response has meaningful data (expanded checks for different platforms)
+
+      // Check if response has meaningful data
       if (response.data && (
         response.data.video_url || 
         response.data.download_url || 
@@ -198,28 +213,30 @@ export default async function handler(req, res) {
         response.data.downloadUrl ||
         response.data.success ||
         response.data.formats ||
-        response.data.entries ||
         response.data.result ||
         response.data.download ||
         response.data.media ||
         (response.data.status && response.data.status === 'success') ||
-        (Array.isArray(response.data) && response.data.length > 0)
+        (Array.isArray(response.data) && response.data.length > 0) ||
+        (typeof response.data === 'string' && response.data.includes('download'))
       )) {
         return res.status(200).json({
           success: true,
           originalUrl: url,
           resolvedUrl: resolvedUrl,
+          platform: platform,
           contentType: response.headers['content-type'],
           apiUsed: endpoint.name,
           data: response.data
         });
       } else {
         console.log(`⚠️ ${endpoint.name} returned empty or invalid data`);
-        if (i === relevantApis.length - 1) {
+        if (i === apiEndpoints.length - 1) {
           return res.status(200).json({
             success: true,
             originalUrl: url,
             resolvedUrl: resolvedUrl,
+            platform: platform,
             contentType: response.headers['content-type'],
             apiUsed: endpoint.name,
             data: response.data,
@@ -227,20 +244,19 @@ export default async function handler(req, res) {
           });
         }
       }
-      
+
     } catch (error) {
       const statusCode = error.response?.status;
       const errorMsg = error.response?.data?.message || error.message;
       const errorData = error.response?.data;
-      
+
       console.log(`❌ ${endpoint.name} failed: ${statusCode || 'Network Error'} - ${errorMsg}`);
-      
+
       // If this is the last API and all failed, return detailed error info
-      if (i === relevantApis.length - 1) {
-        // Return 200 with error details instead of 500 to avoid frontend issues
+      if (i === apiEndpoints.length - 1) {
         return res.status(200).json({
           success: false,
-          error: `All ${relevantApis.length} relevant API endpoints failed for ${platform} platform.`,
+          error: `All ${apiEndpoints.length} API endpoints failed for ${platform} platform.`,
           lastError: {
             api: endpoint.name,
             status: statusCode || 'Network Error',
@@ -254,15 +270,14 @@ export default async function handler(req, res) {
             "The video might be private or age-restricted",
             "The video URL might have expired or been removed", 
             "Try using the direct video page URL instead of share links",
-            "Some APIs may be temporarily down",
-            "For Facebook, try copying the URL from the address bar while viewing the video"
+            "Some APIs may be temporarily down"
           ],
-          testedApis: relevantApis.map(api => api.name),
+          testedApis: apiEndpoints.map(api => api.name),
           troubleshooting: {
             facebook: "Facebook videos are often restricted. Try public posts only.",
             tiktok: "Use full tiktok.com URLs, not shortened vt.tiktok.com links",
-            youtube: "Ensure the video is public and not age-restricted",
-            instagram: "Instagram videos may require the post to be public"
+            instagram: "Instagram videos may require the post to be public",
+            youtube: "Use full YouTube URLs. Age-restricted or private videos may not work."
           }
         });
       }
