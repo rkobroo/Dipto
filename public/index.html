@@ -193,7 +193,13 @@
                 }
 
                 const data = await response.json();
-                showResponse(JSON.stringify(data, null, 2), 'success', 'API Response:');
+                
+                // Check if the response indicates success or failure
+                if (data.success === false) {
+                    showResponse(JSON.stringify(data, null, 2), 'error', 'API Response (Failed):');
+                } else {
+                    showResponse(JSON.stringify(data, null, 2), 'success', 'API Response:');
+                }
 
             } catch (error) {
                 console.error('API Error:', error);
