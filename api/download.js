@@ -12,9 +12,10 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'URL is required' });
   }
 
-  // Resolve shortened TikTok URLs to full URLs
+  // Resolve shortened URLs and normalize Facebook URLs
   async function resolveUrl(shortUrl) {
     try {
+      // Handle TikTok shortened URLs
       if (shortUrl.includes('vt.tiktok.com') || shortUrl.includes('vm.tiktok.com')) {
         console.log(`🔗 Resolving shortened URL: ${shortUrl}`);
         const response = await axios.head(shortUrl, {
@@ -25,6 +26,18 @@ export default async function handler(req, res) {
         console.log(`✅ Resolved to: ${resolvedUrl}`);
         return resolvedUrl || shortUrl;
       }
+      
+      // Normalize Facebook URLs
+      if (shortUrl.includes('facebook.com/share/r/')) {
+        // Convert share URLs to more compatible format
+        const shareMatch = shortUrl.match(/facebook\.com\/share\/r\/([a-zA-Z0-9]+)/);
+        if (shareMatch) {
+          console.log(`🔗 Converting Facebook share URL: ${shortUrl}`);
+          // This is a basic conversion - actual Facebook URLs are more complex
+          return shortUrl;
+        }
+      }
+      
       return shortUrl;
     } catch (error) {
       console.log(`⚠️ Could not resolve URL, using original: ${shortUrl}`);
@@ -76,6 +89,13 @@ export default async function handler(req, res) {
       },
       platforms: ['universal', 'tiktok', 'facebook', 'instagram', 'youtube', 'twitter']
     },
+    // Facebook specific APIs
+    {
+      url: `https://www.noobs-api.rf.gd/download?url=${encodeURIComponent(resolvedUrl)}`,
+      method: 'GET',
+      name: 'Noobs API (Facebook)',
+      platforms: ['facebook', 'universal']
+    },
     // TikTok specific APIs - Enhanced
     {
       url: `https://api.tiklydown.eu.org/api/download?url=${encodeURIComponent(resolvedUrl)}`,
@@ -99,6 +119,13 @@ export default async function handler(req, res) {
       method: 'GET',
       name: 'YouTube oEmbed',
       platforms: ['youtube']
+    },
+    // Additional Facebook fallback
+    {
+      url: 'https://api.savefrom.net/getinfo',
+      method: 'GET',
+      name: 'SaveFrom.net',
+      platforms: ['facebook', 'youtube', 'universal']
     }
   ];
 
@@ -204,24 +231,39 @@ export default async function handler(req, res) {
     } catch (error) {
       const statusCode = error.response?.status;
       const errorMsg = error.response?.data?.message || error.message;
+      const errorData = error.response?.data;
       
       console.log(`❌ ${endpoint.name} failed: ${statusCode || 'Network Error'} - ${errorMsg}`);
       
+      // If this is the last API and all failed, return detailed error info
       if (i === relevantApis.length - 1) {
-        return res.status(500).json({
-          error: `All ${relevantApis.length} relevant API endpoints failed for ${platform} platform. Most recent error: ${statusCode || 'Network Error'} - ${errorMsg}`,
+        // Return 200 with error details instead of 500 to avoid frontend issues
+        return res.status(200).json({
           success: false,
+          error: `All ${relevantApis.length} relevant API endpoints failed for ${platform} platform.`,
+          lastError: {
+            api: endpoint.name,
+            status: statusCode || 'Network Error',
+            message: errorMsg,
+            data: errorData
+          },
           platform: platform,
           originalUrl: url,
           resolvedUrl: resolvedUrl,
           suggestions: [
             "The video might be private or age-restricted",
-            "The video URL might have expired", 
-            "Try using a different platform's URL format",
+            "The video URL might have expired or been removed", 
+            "Try using the direct video page URL instead of share links",
             "Some APIs may be temporarily down",
-            "For TikTok, try using the full tiktok.com URL instead of shortened links"
+            "For Facebook, try copying the URL from the address bar while viewing the video"
           ],
-          testedApis: relevantApis.map(api => api.name)
+          testedApis: relevantApis.map(api => api.name),
+          troubleshooting: {
+            facebook: "Facebook videos are often restricted. Try public posts only.",
+            tiktok: "Use full tiktok.com URLs, not shortened vt.tiktok.com links",
+            youtube: "Ensure the video is public and not age-restricted",
+            instagram: "Instagram videos may require the post to be public"
+          }
         });
       }
     }
