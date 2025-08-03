@@ -1,5 +1,5 @@
 
-const axios = require('axios');
+import axios from 'axios';
 
 const download = async (url) => {
   if (!url) {
@@ -121,10 +121,14 @@ const download = async (url) => {
 };
 
 // Simple server setup with port checking
-const http = require('http');
-const fs = require('fs');
-const path = require('path');
-const url = require('url');
+import http from 'http';
+import fs from 'fs';
+import path from 'path';
+import url from 'url';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const server = http.createServer(async (req, res) => {
   const parsedUrl = url.parse(req.url, true);
@@ -216,4 +220,4 @@ const startServer = (port) => {
 
 startServer(PORT);
 
-module.exports = { download };
+export { download };
