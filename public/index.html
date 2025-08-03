@@ -96,6 +96,17 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+        .platform-info {
+            margin-bottom: 15px;
+            padding: 8px 12px;
+            background-color: #e3f2fd;
+            border-radius: 4px;
+            border-left: 3px solid #2196f3;
+        }
+        .platform-info small {
+            color: #1976d2;
+            font-weight: 500;
+        }
     </style>
 </head>
 <body>
@@ -104,8 +115,12 @@
         
         <div class="input-group">
             <label for="videoUrl">Video URL:</label>
-            <input type="url" id="videoUrl" placeholder="Enter TikTok, Facebook, or other video URL" 
-                   value="https://vt.tiktok.com/ZSB3dx7rq/">
+            <input type="url" id="videoUrl" placeholder="Enter TikTok, Facebook, Instagram, YouTube, or other video URL" 
+                   value="">
+        </div>
+        
+        <div class="platform-info" id="platformInfo" style="display: none;">
+            <small>🎯 Detected Platform: <span id="detectedPlatform"></span></small>
         </div>
         
         <button onclick="checkApiResponse()" id="checkBtn">🔍 Check API Response</button>
@@ -120,6 +135,28 @@
     </div>
 
     <script>
+        function detectPlatform(url) {
+            if (url.includes('tiktok.com')) return 'TikTok';
+            if (url.includes('facebook.com') || url.includes('fb.watch')) return 'Facebook';
+            if (url.includes('instagram.com')) return 'Instagram';
+            if (url.includes('youtube.com') || url.includes('youtu.be')) return 'YouTube';
+            if (url.includes('twitter.com') || url.includes('x.com')) return 'Twitter/X';
+            return 'Universal';
+        }
+
+        function showPlatformInfo(url) {
+            const platform = detectPlatform(url);
+            const platformInfo = document.getElementById('platformInfo');
+            const detectedPlatform = document.getElementById('detectedPlatform');
+            
+            if (url.trim()) {
+                detectedPlatform.textContent = platform;
+                platformInfo.style.display = 'block';
+            } else {
+                platformInfo.style.display = 'none';
+            }
+        }
+
         async function checkApiResponse() {
             const url = document.getElementById('videoUrl').value.trim();
             const loading = document.getElementById('loading');
@@ -130,6 +167,8 @@
                 showResponse('Please enter a valid URL', 'error');
                 return;
             }
+
+            showPlatformInfo(url);
             
             // Show loading
             loading.style.display = 'block';
@@ -182,6 +221,12 @@
                 checkApiResponse();
             }
         });
+
+        // Show platform detection on URL input
+        document.getElementById('videoUrl').addEventListener('input', function(e) {
+            showPlatformInfo(e.target.value);
+        });
     </script>
 </body>
-</html>
+    </html>
+    
