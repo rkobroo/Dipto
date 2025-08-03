@@ -92,6 +92,34 @@ export default async function handler(req, res) {
   } else if (platform === 'facebook' || platform === 'instagram') {
     apiEndpoints = [
       {
+        url: 'https://yt-dlp-api.vercel.app/api/download',
+        method: 'POST',
+        name: 'YT-DLP API',
+        data: {
+          url: resolvedUrl,
+          format: 'best[ext=mp4]'
+        },
+        headers: {
+          'Content-Type': 'application/json',
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        },
+        platforms: ['facebook', 'instagram']
+      },
+      {
+        url: 'https://ytdl-api.herokuapp.com/api/video',
+        method: 'POST',
+        name: 'YTDL Heroku',
+        data: {
+          url: resolvedUrl,
+          format: 'mp4'
+        },
+        headers: {
+          'Content-Type': 'application/json',
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        },
+        platforms: ['facebook', 'instagram']
+      },
+      {
         url: 'https://api.cobalt.tools/api/json',
         method: 'POST',
         name: 'Cobalt (FB/IG)',
@@ -109,6 +137,23 @@ export default async function handler(req, res) {
         platforms: ['facebook', 'instagram']
       },
       {
+        url: 'https://loader.to/ajax/download.php',
+        method: 'POST',
+        name: 'Loader.to',
+        data: {
+          type: 'video',
+          url: resolvedUrl,
+          token: ''
+        },
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+          'X-Requested-With': 'XMLHttpRequest',
+          'Referer': 'https://loader.to/'
+        },
+        platforms: ['facebook', 'instagram']
+      },
+      {
         url: 'https://snapsave.app/action.php',
         method: 'POST',
         name: 'SnapSave',
@@ -121,37 +166,6 @@ export default async function handler(req, res) {
           'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
           'X-Requested-With': 'XMLHttpRequest',
           'Referer': 'https://snapsave.app/'
-        },
-        platforms: ['facebook', 'instagram']
-      },
-      {
-        url: 'https://api.savefrom.net/ajax',
-        method: 'POST',
-        name: 'SaveFrom',
-        data: {
-          url: resolvedUrl,
-          quality: 'max'
-        },
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-          'Referer': 'https://savefrom.net/',
-          'X-Requested-With': 'XMLHttpRequest'
-        },
-        platforms: ['facebook', 'instagram']
-      },
-      {
-        url: 'https://www.downloadvideosfrom.com/wp-json/aio-dl/video-data',
-        method: 'POST',
-        name: 'DownloadVideosFrom',
-        data: {
-          url: resolvedUrl,
-          token: 'aio-dl'
-        },
-        headers: {
-          'Content-Type': 'application/json',
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-          'Referer': 'https://www.downloadvideosfrom.com/'
         },
         platforms: ['facebook', 'instagram']
       },
@@ -318,6 +332,14 @@ export default async function handler(req, res) {
           formData.append('URLz', resolvedUrl);
 
           response = await axios.post(endpoint.url, formData, config);
+        } else if (endpoint.name === 'Loader.to') {
+          // Loader.to expects form data
+          const formData = new URLSearchParams();
+          formData.append('type', 'video');
+          formData.append('url', resolvedUrl);
+          formData.append('token', '');
+
+          response = await axios.post(endpoint.url, formData, config);
         } else if (endpoint.name === 'TwitSave') {
           // TwitSave expects form data
           const formData = new URLSearchParams();
@@ -333,7 +355,7 @@ export default async function handler(req, res) {
 
           response = await axios.post(endpoint.url, formData, config);
         } else {
-          // Other APIs expect JSON
+          // Other APIs expect JSON (including YT-DLP APIs)
           config.headers['Content-Type'] = 'application/json';
           response = await axios.post(endpoint.url, endpoint.data, config);
         }
@@ -359,6 +381,12 @@ export default async function handler(req, res) {
         response.data.result ||
         response.data.download ||
         response.data.media ||
+        response.data.title ||
+        response.data.thumbnail ||
+        response.data.duration ||
+        response.data.uploader ||
+        response.data.webpage_url ||
+        response.data.requested_downloads ||
         (response.data.status && response.data.status === 'success') ||
         (Array.isArray(response.data) && response.data.length > 0) ||
         (typeof response.data === 'string' && response.data.includes('download'))
@@ -427,4 +455,4 @@ export default async function handler(req, res) {
       }
     }
   }
-                     }
+}
