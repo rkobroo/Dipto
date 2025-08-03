@@ -47,6 +47,7 @@ export default async function handler(req, res) {
     if (url.includes('facebook.com') || url.includes('fb.watch')) return 'facebook';
     if (url.includes('instagram.com')) return 'instagram';
     if (url.includes('youtube.com') || url.includes('youtu.be')) return 'youtube';
+    if (url.includes('twitter.com') || url.includes('x.com')) return 'twitter';
     return 'unsupported';
   }
 
@@ -91,6 +92,23 @@ export default async function handler(req, res) {
   } else if (platform === 'facebook' || platform === 'instagram') {
     apiEndpoints = [
       {
+        url: 'https://api.cobalt.tools/api/json',
+        method: 'POST',
+        name: 'Cobalt (FB/IG)',
+        data: {
+          url: resolvedUrl,
+          vCodec: "h264",
+          vQuality: "720",
+          aFormat: "mp3",
+          isAudioOnly: false
+        },
+        headers: {
+          'Content-Type': 'application/json',
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        },
+        platforms: ['facebook', 'instagram']
+      },
+      {
         url: 'https://snapsave.app/action.php',
         method: 'POST',
         name: 'SnapSave',
@@ -103,6 +121,52 @@ export default async function handler(req, res) {
           'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
           'X-Requested-With': 'XMLHttpRequest',
           'Referer': 'https://snapsave.app/'
+        },
+        platforms: ['facebook', 'instagram']
+      },
+      {
+        url: 'https://api.savefrom.net/ajax',
+        method: 'POST',
+        name: 'SaveFrom',
+        data: {
+          url: resolvedUrl,
+          quality: 'max'
+        },
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+          'Referer': 'https://savefrom.net/',
+          'X-Requested-With': 'XMLHttpRequest'
+        },
+        platforms: ['facebook', 'instagram']
+      },
+      {
+        url: 'https://www.downloadvideosfrom.com/wp-json/aio-dl/video-data',
+        method: 'POST',
+        name: 'DownloadVideosFrom',
+        data: {
+          url: resolvedUrl,
+          token: 'aio-dl'
+        },
+        headers: {
+          'Content-Type': 'application/json',
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+          'Referer': 'https://www.downloadvideosfrom.com/'
+        },
+        platforms: ['facebook', 'instagram']
+      },
+      {
+        url: 'https://fdown.net/download',
+        method: 'POST',
+        name: 'FDown',
+        data: {
+          URLz: resolvedUrl
+        },
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+          'Referer': 'https://fdown.net/',
+          'Origin': 'https://fdown.net'
         },
         platforms: ['facebook', 'instagram']
       }
@@ -144,14 +208,66 @@ export default async function handler(req, res) {
         platforms: ['youtube']
       }
     ];
+  } else if (platform === 'twitter') {
+    apiEndpoints = [
+      {
+        url: 'https://api.cobalt.tools/api/json',
+        method: 'POST',
+        name: 'Cobalt (Twitter)',
+        data: {
+          url: resolvedUrl,
+          vCodec: "h264",
+          vQuality: "720",
+          aFormat: "mp3",
+          isAudioOnly: false
+        },
+        headers: {
+          'Content-Type': 'application/json',
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        },
+        platforms: ['twitter']
+      },
+      {
+        url: 'https://twitsave.com/info',
+        method: 'POST',
+        name: 'TwitSave',
+        data: {
+          url: resolvedUrl
+        },
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+          'Referer': 'https://twitsave.com/',
+          'Origin': 'https://twitsave.com'
+        },
+        platforms: ['twitter']
+      },
+      {
+        url: 'https://ssstwitter.com/en',
+        method: 'POST',
+        name: 'SSSTwitter',
+        data: {
+          id: resolvedUrl,
+          locale: 'en',
+          tt: ''
+        },
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+          'Referer': 'https://ssstwitter.com/',
+          'X-Requested-With': 'XMLHttpRequest'
+        },
+        platforms: ['twitter']
+      }
+    ];
   } else {
     return res.status(200).json({
       success: false,
-      error: `Platform not supported. Only TikTok, Facebook, Instagram, and YouTube are supported.`,
+      error: `Platform not supported. Only TikTok, Facebook, Instagram, YouTube, and Twitter/X are supported.`,
       platform: platform,
       originalUrl: url,
       resolvedUrl: resolvedUrl,
-      supportedPlatforms: ['TikTok', 'Facebook', 'Instagram', 'YouTube']
+      supportedPlatforms: ['TikTok', 'Facebook', 'Instagram', 'YouTube', 'Twitter/X']
     });
   }
 
@@ -187,6 +303,33 @@ export default async function handler(req, res) {
           formData.append('url', resolvedUrl);
           formData.append('q_auto', '1');
           formData.append('ajax', '1');
+
+          response = await axios.post(endpoint.url, formData, config);
+        } else if (endpoint.name === 'SaveFrom') {
+          // SaveFrom expects form data
+          const formData = new URLSearchParams();
+          formData.append('url', resolvedUrl);
+          formData.append('quality', 'max');
+
+          response = await axios.post(endpoint.url, formData, config);
+        } else if (endpoint.name === 'FDown') {
+          // FDown expects form data
+          const formData = new URLSearchParams();
+          formData.append('URLz', resolvedUrl);
+
+          response = await axios.post(endpoint.url, formData, config);
+        } else if (endpoint.name === 'TwitSave') {
+          // TwitSave expects form data
+          const formData = new URLSearchParams();
+          formData.append('url', resolvedUrl);
+
+          response = await axios.post(endpoint.url, formData, config);
+        } else if (endpoint.name === 'SSSTwitter') {
+          // SSSTwitter expects form data
+          const formData = new URLSearchParams();
+          formData.append('id', resolvedUrl);
+          formData.append('locale', 'en');
+          formData.append('tt', '');
 
           response = await axios.post(endpoint.url, formData, config);
         } else {
@@ -277,10 +420,11 @@ export default async function handler(req, res) {
             facebook: "Facebook videos are often restricted. Try public posts only.",
             tiktok: "Use full tiktok.com URLs, not shortened vt.tiktok.com links",
             instagram: "Instagram videos may require the post to be public",
-            youtube: "Use full YouTube URLs. Age-restricted or private videos may not work."
+            youtube: "Use full YouTube URLs. Age-restricted or private videos may not work.",
+            twitter: "Use full Twitter/X URLs. Protected tweets and accounts may not work."
           }
         });
       }
     }
   }
-}
+                     }
