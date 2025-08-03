@@ -47,6 +47,13 @@ export default async function handler(req, res) {
     if (url.includes('instagram.com')) return 'instagram';
     if (url.includes('youtube.com') || url.includes('youtu.be')) return 'youtube';
     if (url.includes('twitter.com') || url.includes('x.com')) return 'twitter';
+    if (url.includes('pinterest.com')) return 'pinterest';
+    if (url.includes('snapchat.com')) return 'snapchat';
+    if (url.includes('reddit.com')) return 'reddit';
+    if (url.includes('linkedin.com')) return 'linkedin';
+    if (url.includes('vimeo.com')) return 'vimeo';
+    if (url.includes('twitch.tv')) return 'twitch';
+    if (url.includes('dailymotion.com')) return 'dailymotion';
     return 'universal';
   }
 
@@ -55,7 +62,7 @@ export default async function handler(req, res) {
 
   // Try multiple API endpoints with different approaches
   const apiEndpoints = [
-    // Universal downloaders (work with multiple platforms)
+    // Universal downloaders (work with multiple platforms) - Primary tier
     {
       url: 'https://api.cobalt.tools/api/json',
       method: 'POST',
@@ -70,25 +77,89 @@ export default async function handler(req, res) {
       platforms: ['universal', 'tiktok', 'facebook', 'instagram', 'youtube', 'twitter']
     },
     {
-      url: `https://api.fdownloader.net/api`,
-      method: 'POST',
-      name: 'FDownloader (Universal)',
-      data: {
-        url: resolvedUrl
-      },
-      platforms: ['universal', 'facebook', 'instagram', 'youtube', 'tiktok']
-    },
-    {
-      url: `https://api.savetubeapp.com/download`,
-      method: 'POST',
-      name: 'SaveTube (Universal)',
+      url: 'https://api.savefrom.net/info/',
+      method: 'GET',
+      name: 'SaveFrom.net (Universal)',
       data: {
         url: resolvedUrl,
-        quality: "720"
+        lang: 'en'
       },
-      platforms: ['universal', 'facebook', 'instagram', 'youtube', 'tiktok']
+      platforms: ['universal', 'youtube', 'facebook', 'instagram', 'tiktok', 'twitter']
     },
-    // TikTok specific APIs
+    {
+      url: 'https://api.snapinsta.app/v1/video-downloader',
+      method: 'POST',
+      name: 'SnapInsta (Universal)',
+      data: {
+        url: resolvedUrl,
+        quality: 'hd'
+      },
+      platforms: ['universal', 'instagram', 'facebook', 'youtube', 'tiktok', 'twitter']
+    },
+    {
+      url: 'https://api.y2mate.com/convert',
+      method: 'POST',  
+      name: 'Y2Mate (Universal)',
+      data: {
+        url: resolvedUrl,
+        format: 'mp4',
+        quality: '720p'
+      },
+      platforms: ['universal', 'youtube', 'facebook', 'instagram', 'tiktok']
+    },
+    {
+      url: 'https://api.downloadvideo.net/api/video',
+      method: 'POST',
+      name: 'DownloadVideo.net (Universal)',
+      data: {
+        url: resolvedUrl,
+        format: 'mp4'
+      }, 
+      platforms: ['universal', 'youtube', 'facebook', 'instagram', 'tiktok', 'twitter']
+    },
+    {
+      url: 'https://api.alltubedownload.net/download',
+      method: 'POST',
+      name: 'AllTube (Universal)',
+      data: {
+        url: resolvedUrl,
+        format: "best"
+      },
+      platforms: ['universal', 'youtube', 'facebook', 'instagram', 'twitter']
+    },
+    {
+      url: 'https://loader.to/api/button/',
+      method: 'POST',
+      name: 'Loader.to (Universal)',
+      data: {
+        url: resolvedUrl,
+        f: "720",
+        lang: "en"
+      },
+      platforms: ['universal', 'youtube', 'facebook', 'instagram']
+    },
+    {
+      url: 'https://api.yt1s.com/api/button/mp4',
+      method: 'POST',
+      name: 'YT1S (Universal)',
+      data: {
+        url: resolvedUrl,
+        f: '720'
+      },
+      platforms: ['universal', 'youtube', 'facebook', 'instagram', 'tiktok']
+    },
+    {
+      url: 'https://api.downloadgram.org/media',
+      method: 'POST',
+      name: 'DownloadGram (Universal)',
+      data: {
+        url: resolvedUrl,
+        type: 'video'
+      },
+      platforms: ['universal', 'instagram', 'facebook', 'youtube', 'tiktok']
+    },
+
+    // TikTok specific APIs - Enhanced
     {
       url: `https://api.tiklydown.eu.org/api/download?url=${encodeURIComponent(resolvedUrl)}`,
       method: 'GET',
@@ -105,21 +176,393 @@ export default async function handler(req, res) {
       },
       platforms: ['tiktok']
     },
-    // Facebook/Instagram specific
     {
-      url: `https://api.down-fb.com/download`,
+      url: 'https://www.tikwm.com/api/',
       method: 'POST',
-      name: 'DownFB',
+      name: 'TikWM Alternative',
       data: {
-        url: resolvedUrl
+        url: resolvedUrl,
+        count: 12,
+        cursor: 0,
+        web: 1,
+        hd: 1
       },
-      platforms: ['facebook', 'instagram']
+      platforms: ['tiktok']
     },
-    // Fallback APIs
     {
-      url: `https://www.noobs-api.rf.gd/download?url=${encodeURIComponent(resolvedUrl)}`,
+      url: 'https://api.tiktokv.com/aweme/v1/multi/aweme/detail/',
       method: 'GET',
-      name: 'Noobs API',
+      name: 'TikTok API Direct',
+      data: {
+        aweme_ids: `[${extractTikTokId(resolvedUrl)}]`
+      },
+      platforms: ['tiktok']
+    },
+    {
+      url: 'https://api.ssstik.io/abc',
+      method: 'POST',
+      name: 'SSSTik',
+      data: {
+        url: resolvedUrl,
+        lang: 'en'
+      },
+      platforms: ['tiktok']
+    },
+    {
+      url: 'https://musicaldown.com/download',
+      method: 'POST', 
+      name: 'MusicalDown',
+      data: {
+        url: resolvedUrl,
+        hd: 1
+      },
+      platforms: ['tiktok']
+    },
+
+    // YouTube specific - Enhanced
+    {
+      url: 'https://youtube-dl-api-olive.vercel.app/api/download',
+      method: 'POST',
+      name: 'YouTube DL API',
+      data: {
+        url: resolvedUrl,
+        quality: "720p"
+      },
+      platforms: ['youtube']
+    },
+    {
+      url: 'https://api.youtubedl.org/api/info',
+      method: 'GET',
+      name: 'YouTubeDL.org',
+      data: {
+        url: resolvedUrl,
+        format: 'best[height<=720]'
+      },
+      platforms: ['youtube']
+    },
+    {
+      url: 'https://youtube-api-download.herokuapp.com/dl',
+      method: 'POST',
+      name: 'YouTube API Download',
+      data: {
+        url: resolvedUrl,
+        format: 'mp4',
+        quality: '720p'
+      },
+      platforms: ['youtube']
+    },
+    {
+      url: 'https://api.ytdl.org/youtube/search',
+      method: 'POST',
+      name: 'YTDL API',
+      data: {
+        url: resolvedUrl,
+        format: 'best'
+      },
+      platforms: ['youtube']
+    },
+
+    // Instagram specific - Enhanced  
+    {
+      url: 'https://instagram-downloader-download-instagram-videos-stories.p.rapidapi.com/index',
+      method: 'GET',
+      name: 'Instagram Downloader',
+      headers: {
+        'X-RapidAPI-Key': 'demo-key',
+        'X-RapidAPI-Host': 'instagram-downloader-download-instagram-videos-stories.p.rapidapi.com'
+      },
+      platforms: ['instagram']
+    },
+    {
+      url: 'https://api.instagram-downloader.com/media',
+      method: 'POST',
+      name: 'Instagram Downloader API',
+      data: {
+        url: resolvedUrl,
+        type: 'video'
+      },
+      platforms: ['instagram']
+    },
+    {
+      url: 'https://instasave.io/api/media',
+      method: 'POST',
+      name: 'InstaSave',
+      data: {
+        url: resolvedUrl,
+        format: 'mp4'
+      },
+      platforms: ['instagram']
+    },
+    {
+      url: 'https://api.saveinsta.app/download',
+      method: 'POST',
+      name: 'SaveInsta',
+      data: {
+        url: resolvedUrl,
+        quality: 'hd'
+      },
+      platforms: ['instagram']
+    },
+
+    // Facebook specific - Enhanced
+    {
+      url: 'https://facebook-reel-and-video-downloader.p.rapidapi.com/app/main.php',
+      method: 'GET',
+      name: 'Facebook Downloader',
+      headers: {
+        'X-RapidAPI-Key': 'demo-key',
+        'X-RapidAPI-Host': 'facebook-reel-and-video-downloader.p.rapidapi.com'
+      },
+      platforms: ['facebook']
+    },
+    {
+      url: 'https://api.fbdown.net/download',
+      method: 'POST',
+      name: 'FBDown',
+      data: {
+        url: resolvedUrl,
+        quality: 'hd'
+      },
+      platforms: ['facebook']
+    },
+    {
+      url: 'https://getfvid.com/downloader',
+      method: 'POST',
+      name: 'GetFVid',
+      data: {
+        url: resolvedUrl,
+        format: 'mp4'
+      },
+      platforms: ['facebook']
+    },
+    {
+      url: 'https://api.savefb.net/download-video',
+      method: 'POST',
+      name: 'SaveFB',
+      data: {
+        url: resolvedUrl,
+        type: 'video'
+      },
+      platforms: ['facebook']
+    },
+
+    // Twitter/X specific - Enhanced
+    {
+      url: 'https://api.twittervideodownloader.com/download',
+      method: 'POST',
+      name: 'Twitter Video Downloader',
+      data: {
+        url: resolvedUrl,
+        quality: 'best'
+      },
+      platforms: ['twitter']
+    },
+    {
+      url: 'https://twitsave.com/api/download',
+      method: 'POST',
+      name: 'TwitSave',
+      data: {
+        url: resolvedUrl,
+        format: 'mp4'
+      },
+      platforms: ['twitter']
+    },
+    {
+      url: 'https://api.twittervid.com/download',
+      method: 'POST',
+      name: 'TwitterVid',
+      data: {
+        url: resolvedUrl,
+        type: 'video'
+      },
+      platforms: ['twitter']
+    },
+
+    // Pinterest specific - New
+    {
+      url: 'https://api.pinterestdownloader.com/download',
+      method: 'POST',
+      name: 'Pinterest Downloader',
+      data: {
+        url: resolvedUrl,
+        format: 'mp4'
+      },
+      platforms: ['pinterest']
+    },
+
+    // Snapchat specific - New
+    {
+      url: 'https://api.snapchatdownloader.com/download',
+      method: 'POST',
+      name: 'Snapchat Downloader',
+      data: {
+        url: resolvedUrl,
+        quality: 'original'
+      },
+      platforms: ['snapchat']
+    },
+
+    // Reddit specific - New
+    {
+      url: 'https://api.redditvideo.download/download',
+      method: 'POST',
+      name: 'Reddit Video Downloader',
+      data: {
+        url: resolvedUrl,
+        format: 'mp4'
+      },
+      platforms: ['reddit']
+    },
+
+    // LinkedIn specific - New
+    {
+      url: 'https://api.linkedindownloader.com/video',
+      method: 'POST',
+      name: 'LinkedIn Downloader',
+      data: {
+        url: resolvedUrl,
+        quality: 'hd'
+      },
+      platforms: ['linkedin']
+    },
+
+    // Vimeo specific - New
+    {
+      url: 'https://api.vimeodownloader.com/download',
+      method: 'POST',
+      name: 'Vimeo Downloader',
+      data: {
+        url: resolvedUrl,
+        format: 'mp4',
+        quality: '720p'
+      },
+      platforms: ['vimeo']
+    },
+
+    // Twitch specific - New
+    {
+      url: 'https://api.twitchdownloader.com/download',
+      method: 'POST',
+      name: 'Twitch Downloader',
+      data: {
+        url: resolvedUrl,
+        format: 'mp4'
+      },
+      platforms: ['twitch']
+    },
+
+    // Dailymotion specific - New
+    {
+      url: 'https://api.dailymotiondownloader.com/download',
+      method: 'POST',
+      name: 'Dailymotion Downloader',
+      data: {
+        url: resolvedUrl,
+        quality: '720p'
+      },
+      platforms: ['dailymotion']
+    },
+
+    // New APIs from recommended websites
+    {
+      url: 'https://api.allinonedownloader.com/download',
+      method: 'POST',
+      name: 'AllInOneDownloader',
+      data: {
+        url: resolvedUrl,
+        format: 'mp4',
+        quality: 'best'
+      },
+      platforms: ['universal', 'youtube', 'facebook', 'instagram', 'tiktok', 'twitter']
+    },
+    {
+      url: 'https://api.publer.com/v1/video/download',
+      method: 'POST',
+      name: 'Publer API',
+      data: {
+        url: resolvedUrl,
+        type: 'video'
+      },
+      platforms: ['universal', 'facebook', 'instagram', 'youtube', 'twitter', 'linkedin']
+    },
+    {
+      url: 'https://ssvid.net/api/download',
+      method: 'POST',
+      name: 'SSvid.net',
+      data: {
+        url: resolvedUrl,
+        format: 'mp4',
+        quality: 'hd'
+      },
+      platforms: ['universal', 'youtube', 'facebook', 'instagram', 'tiktok']
+    },
+    {
+      url: 'https://www.duplichecker.com/api/video-downloader',
+      method: 'POST',
+      name: 'DupliChecker Video Downloader',
+      data: {
+        url: resolvedUrl,
+        download_type: 'video'
+      },
+      platforms: ['universal', 'youtube', 'facebook', 'instagram', 'tiktok', 'twitter']
+    },
+    {
+      url: 'https://retatube.com/api/download',
+      method: 'POST',
+      name: 'RetaTube',
+      data: {
+        url: resolvedUrl,
+        format: 'mp4',
+        quality: '720p'
+      },
+      platforms: ['universal', 'youtube', 'facebook', 'instagram', 'tiktok']
+    },
+
+    // Generic/Fallback APIs - Enhanced
+    {
+      url: `https://api.vevioz.com/api/button/fetch?url=${encodeURIComponent(resolvedUrl)}`,
+      method: 'GET',
+      name: 'Vevioz API',
+      platforms: ['universal']
+    },
+    {
+      url: 'https://api.9xbuddy.com/download',
+      method: 'POST',
+      name: '9xBuddy',
+      data: {
+        url: resolvedUrl,
+        format: 'mp4'
+      },
+      platforms: ['universal']
+    },
+    {
+      url: 'https://api.keepvid.com/download',
+      method: 'POST',
+      name: 'KeepVid',
+      data: {
+        url: resolvedUrl,
+        quality: 'best'
+      },
+      platforms: ['universal']
+    },
+    {
+      url: 'https://api.videodownloader.so/api/video',
+      method: 'POST',
+      name: 'VideoDownloader.so',
+      data: {
+        url: resolvedUrl,
+        format: 'mp4'
+      },
+      platforms: ['universal']
+    },
+    {
+      url: 'https://api.savemp4.red/download',
+      method: 'POST',
+      name: 'SaveMP4',
+      data: {
+        url: resolvedUrl,
+        quality: 'hd'
+      },
       platforms: ['universal']
     }
   ];
@@ -151,7 +594,13 @@ export default async function handler(req, res) {
         config.headers['Content-Type'] = 'application/json';
         response = await axios.post(endpoint.url, endpoint.data, config);
       } else {
-        response = await axios.get(endpoint.url, config);
+        // For GET requests with parameters, append URL if needed
+        let requestUrl = endpoint.url;
+        if (endpoint.data && endpoint.method === 'GET') {
+          const params = new URLSearchParams(endpoint.data);
+          requestUrl += (requestUrl.includes('?') ? '&' : '?') + params.toString();
+        }
+        response = await axios.get(requestUrl, config);
       }
       
       console.log(`✅ ${endpoint.name} API responded successfully`);
@@ -167,7 +616,14 @@ export default async function handler(req, res) {
         response.data.medias ||
         response.data.video ||
         response.data.downloadUrl ||
-        response.data.success
+        response.data.success ||
+        response.data.formats ||
+        response.data.entries ||
+        response.data.result ||
+        response.data.download ||
+        response.data.media ||
+        (response.data.status && response.data.status === 'success') ||
+        (Array.isArray(response.data) && response.data.length > 0)
       )) {
         return res.status(200).json({
           success: true,
@@ -200,11 +656,19 @@ export default async function handler(req, res) {
       
       if (i === relevantApis.length - 1) {
         return res.status(500).json({
-          error: `All ${relevantApis.length} relevant API endpoints failed for ${platform} platform. Most recent error: ${statusCode || 'Network Error'} - ${errorMsg}. The video URL might be private, expired, or the APIs are temporarily down.`,
+          error: `All ${relevantApis.length} relevant API endpoints failed for ${platform} platform. Most recent error: ${statusCode || 'Network Error'} - ${errorMsg}`,
           success: false,
           platform: platform,
           originalUrl: url,
-          resolvedUrl: resolvedUrl
+          resolvedUrl: resolvedUrl,
+          suggestions: [
+            "The video might be private or age-restricted",
+            "The video URL might have expired", 
+            "Try using a different platform's URL format",
+            "Some APIs may be temporarily down",
+            "For TikTok, try using the full tiktok.com URL instead of shortened links"
+          ],
+          testedApis: relevantApis.map(api => api.name)
         });
       }
     }
